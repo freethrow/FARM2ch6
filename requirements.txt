@@ -1,3 +1,4 @@
 fastapi==0.111.0
 motor==3.4.0
 uvicorn==0.29.0
+httpie==3.2.2

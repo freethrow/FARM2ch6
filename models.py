@@ -1,6 +1,6 @@
-from typing import Optional, Annotated, List
-from pydantic import BaseModel, ConfigDict, Field, BeforeValidator, field_validator
+from typing import Annotated, List, Optional
 
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator
 
 # Represents an ObjectId field in the database.
 # It will be represented as a string in the model so that it can be serialized to JSON.
@@ -67,22 +67,12 @@ class UpdateCarModel(BaseModel):
     # This will be aliased to `_id` when sent to MongoDB,
     # but provided as `id` in the API requests and responses
 
-    brand: str = Field(...)
+    brand: Optional[str] = Field(...)
     make: Optional[str] = Field(...)
     year: Optional[int] = Field(..., gt=1970, lt=2025)
     cm3: Optional[int] = Field(..., gt=0, lt=5000)
     km: Optional[int] = Field(..., gt=0, lt=500 * 1000)
     price: Optional[int] = Field(..., gt=0, lt=100 * 1000)
-
-    @field_validator("brand")
-    @classmethod
-    def check_brand_case(cls, v: str) -> str:
-        return v.title()
-
-    @field_validator("make")
-    @classmethod
-    def check_make_case(cls, v: str) -> str:
-        return v.title()
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -106,6 +96,11 @@ class CarCollection(BaseModel):
     """
 
     cars: List[CarModel]
+
+
+class CarCollectionPagination(CarCollection):
+    page: int = Field(ge=1, default=1)
+    has_more: bool
 
 
 # test_car_1 = CarModel(
