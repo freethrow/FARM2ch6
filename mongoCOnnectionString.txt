@@ -1,1 +1,0 @@
-mongodb+srv://farmstack:farmstackpassword@cluster0.fkm24.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
