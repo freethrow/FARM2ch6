@@ -1,27 +1,96 @@
 from bson import ObjectId
-from fastapi import APIRouter, Body, HTTPException, Request, status
+from fastapi import (
+    APIRouter,
+    Body,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.responses import Response
 from pymongo import ReturnDocument
 
-from models import CarModel, UpdateCarModel, CarCollectionPagination
+import cloudinary
+from cloudinary import uploader  # noqa: F401
+
+
+from config import BaseConfig
+
+from models import CarCollectionPagination, CarModel, UpdateCarModel
+
+settings = BaseConfig()
 
 router = APIRouter()
 
 CARS_PER_PAGE = 10
 
 
+cloudinary.config(
+    cloud_name=settings.CLOUDINARY_CLOUD_NAME,
+    api_key=settings.CLOUDINARY_API_KEY,
+    api_secret=settings.CLOUDINARY_SECRET_KEY,
+)
+
+
+# @router.post(
+#     "/",
+#     response_description="Add new car",
+#     response_model=CarModel,
+#     status_code=status.HTTP_201_CREATED,
+#     response_model_by_alias=False,
+# )
+# async def add_car(request: Request, car: CarModel = Body(...)):
+#     """Create a new car with a generated id."""
+#     cars = request.app.db["cars"]
+
+#     document = car.model_dump(by_alias=True, exclude=["id"])
+#     inserted = await cars.insert_one(document)
+
+#     return await cars.find_one({"_id": inserted.inserted_id})
+
+
 @router.post(
     "/",
-    response_description="Add new car",
+    response_description="Add new car with picture",
     response_model=CarModel,
     status_code=status.HTTP_201_CREATED,
-    response_model_by_alias=False,
 )
-async def add_car(request: Request, car: CarModel = Body(...)):
+async def add_car_with_picture(
+    request: Request,
+    brand: str = Form("brand"),
+    make: str = Form("make"),
+    year: int = Form("year"),
+    cm3: int = Form("cm3"),
+    km: int = Form("km"),
+    price: int = Form("price"),
+    picture: UploadFile = File("picture"),
+):
+    """Upload picture to Cloudinary and create a new car with a generated id."""
+
+    cloudinary_image = cloudinary.uploader.upload(
+        picture.file, folder="FARM2", crop="fill", width=800
+    )
+
+    picture_url = cloudinary_image["url"]
+
+    car = CarModel(
+        brand=brand,
+        make=make,
+        year=year,
+        cm3=cm3,
+        km=km,
+        price=price,
+        picture_url=picture_url,
+    )
+
     """Create a new car with a generated id."""
+
     cars = request.app.db["cars"]
 
     document = car.model_dump(by_alias=True, exclude=["id"])
+
     inserted = await cars.insert_one(document)
 
     return await cars.find_one({"_id": inserted.inserted_id})

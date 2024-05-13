@@ -23,7 +23,10 @@ class CarModel(BaseModel):
     year: int = Field(..., gt=1970, lt=2025)
     cm3: int = Field(..., gt=0, lt=5000)
     km: int = Field(..., gt=0, lt=500 * 1000)
-    price: int = Field(..., gt=0, lt=100 * 1000)
+    price: int = Field(..., gt=0, lt=100000)
+
+    # add the picture file
+    picture_url: Optional[str] = Field(None)
 
     @field_validator("brand")
     @classmethod
